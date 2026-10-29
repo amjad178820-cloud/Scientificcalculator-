@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scientific Calculator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--page:#e6e7ee;--panel:#e6e7ee;--text:#343746;--muted:#85899a;--shadow-light:#fff;--shadow-dark:#c4c6d0;--blue:#557cf4;--purple:#8d7bd4;--screen:#e9eaf0}
+body.dark{--page:#242632;--panel:#242632;--text:#f0f1f8;--muted:#a5a9ba;--shadow-light:#303342;--shadow-dark:#191b24;--blue:#6688ff;--purple:#a995ee;--screen:#292c39}
+body{min-height:100vh;display:flex;justify-content:center;align-items:center;padding:14px;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:radial-gradient(circle at 15% 20%,rgba(117,149,255,.17),transparent 28%),radial-gradient(circle at 85% 80%,rgba(244,150,180,.16),transparent 26%),var(--page);transition:background .3s ease,color .3s ease}
+.app{width:100%;max-width:340px}
+.heading{text-align:center;margin-bottom:12px}
+.heading h1{font-size:20px;line-height:1.15;letter-spacing:-.5px;margin-bottom:4px;background:linear-gradient(110deg,#5c7df5,#b078e9);-webkit-background-clip:text;background-clip:text;color:transparent}
+.heading p{font-size:10px;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase}
+.calculator{background:var(--panel);padding:14px;border-radius:22px;box-shadow:8px 8px 18px var(--shadow-dark),-8px -8px 18px var(--shadow-light);transition:background .3s ease,box-shadow .3s ease}
+.mode-row{display:flex;justify-content:center;margin-bottom:10px}
+.mode-toggle{display:flex;align-items:center;gap:8px;padding:5px 10px;border:0;border-radius:20px;background:var(--panel);color:var(--muted);box-shadow:inset 3px 3px 6px var(--shadow-dark),inset -3px -3px 6px var(--shadow-light);font-size:9px;font-weight:bold;letter-spacing:1px;cursor:pointer}
+.switch{width:30px;height:16px;border-radius:20px;padding:2px;background:var(--shadow-dark);display:flex;align-items:center}
+.switch-dot{height:12px;width:12px;border-radius:50%;background:var(--blue);transition:transform .25s ease}
+body.dark .switch-dot{transform:translateX(14px)}
+.display{min-height:84px;border-radius:14px;padding:9px 12px 10px;margin-bottom:12px;background:var(--screen);box-shadow:inset 4px 4px 8px var(--shadow-dark),inset -4px -4px 8px var(--shadow-light);display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
+.display-top{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:16px}
+.angle-tag{font-size:9px;font-weight:bold;letter-spacing:1px;color:var(--blue)}
+.previous{color:var(--muted);font-size:11px;text-align:right;overflow-wrap:anywhere}
+.current{text-align:right;font-size:28px;font-weight:600;line-height:1.2;overflow-wrap:anywhere;word-break:break-all}
+.current.long{font-size:18px}
+.keys{display:flex;flex-direction:column;gap:10px}
+.pad{display:grid;gap:7px}
+.sci-pad{grid-template-columns:repeat(6,minmax(0,1fr))}
+.main-pad{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.btn{min-width:0;height:32px;border:0;border-radius:10px;background:var(--panel);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;position:relative;top:0;box-shadow:3px 3px 6px var(--shadow-dark),-3px -3px 6px var(--shadow-light);transition:transform .12s ease,box-shadow .12s ease,color .2s ease;-webkit-tap-highlight-color:transparent;user-select:none}
+.main-pad .btn{height:40px;font-size:15px;border-radius:12px}
+.btn:hover{color:var(--blue)}
+.btn:active,.btn.pressed{transform:translateY(2px) scale(.96);box-shadow:inset 2px 2px 4px var(--shadow-dark),inset -2px -2px 4px var(--shadow-light)}
+.btn.sci{font-size:11px}
+.btn.function{color:var(--purple)}
+.btn.operator{color:var(--blue);font-size:18px}
+.btn.angle{color:var(--blue);font-weight:bold;font-size:10px}
+.btn.equals{grid-column:span 3;background:var(--blue);color:#fff;font-size:19px;box-shadow:3px 3px 8px rgba(64,95,200,.35),-3px -3px 7px var(--shadow-light)}
+.btn.equals:hover{color:#fff;filter:brightness(1.06)}
+.btn.equals:active,.btn.equals.pressed{box-shadow:inset 2px 2px 5px rgba(20,40,120,.45),inset -2px -2px 4px rgba(255,255,255,.15)}
+.hint{margin-top:12px;text-align:center;color:var(--muted);font-size:10px;line-height:1.5}
+</style>
+</head>
+<body>
+<main class="app">
+<header class="heading"><h1>Scientific Calculator</h1><!--<p>Made by Kashif</p>--></header>
+<section class="calculator" aria-label="Scientific calculator">
+<div class="mode-row"><button class="mode-toggle" id="modeToggle" type="button" aria-label="Toggle dark mode"><span id="modeLabel">NORMAL MODE</span><span class="switch"><span class="switch-dot"></span></span></button></div>
+<div class="display" aria-live="polite"><div class="display-top"><span class="angle-tag" id="angleTag">DEG</span><span class="previous" id="previous"></span></div><div class="current" id="current">0</div></div>
+<div class="keys" id="keys">
+<div class="pad sci-pad">
+<button class="btn sci angle" id="angleBtn" data-k="angle">DEG</button>
+<button class="btn sci" data-k="const" data-v="π">π</button>
+<button class="btn sci" data-k="const" data-v="e">e</button>
+<button class="btn sci" data-k="rand">Rand</button>
+<button class="btn sci" data-k="op" data-v="mod">mod</button>
+<button class="btn sci" data-k="ans">Ans</button>
+<button class="btn sci" data-k="fn" data-v="sin(">sin</button>
+<button class="btn sci" data-k="fn" data-v="cos(">cos</button>
+<button class="btn sci" data-k="fn" data-v="tan(">tan</button>
+<button class="btn sci" data-k="fn" data-v="sin⁻¹(">sin⁻¹</button>
+<button class="btn sci" data-k="fn" data-v="cos⁻¹(">cos⁻¹</button>
+<button class="btn sci" data-k="fn" data-v="tan⁻¹(">tan⁻¹</button>
+<button class="btn sci" data-k="fn" data-v="log(">log</button>
+<button class="btn sci" data-k="fn" data-v="ln(">ln</button>
+<button class="btn sci" data-k="fn" data-v="10^(">10ˣ</button>
+<button class="btn sci" data-k="fn" data-v="e^(">eˣ</button>
+<button class="btn sci" data-k="fn" data-v="√(">√</button>
+<button class="btn sci" data-k="fn" data-v="∛(">∛</button>
+<button class="btn sci" data-k="post" data-v="^2">x²</button>
+<button class="btn sci" data-k="post" data-v="^3">x³</button>
+<button class="btn sci" data-k="post" data-v="^">xʸ</button>
+<button class="btn sci" data-k="post" data-v="^(−1)">x⁻¹</button>
+<button class="btn sci" data-k="post" data-v="!">x!</button>
+<button class="btn sci" data-k="fn" data-v="abs(">|x|</button>
+</div>
+<div class="pad main-pad">
+<button class="btn function" data-k="clear">AC</button>
+<button class="btn function" data-k="back" aria-label="Backspace">⌫</button>
+<button class="btn function" data-k="open">(</button>
+<button class="btn function" data-k="close">)</button>
+<button class="btn" data-k="num" data-v="7">7</button>
+<button class="btn" data-k="num" data-v="8">8</button>
+<button class="btn" data-k="num" data-v="9">9</button>
+<button class="btn operator" data-k="op" data-v="÷">÷</button>
+<button class="btn" data-k="num" data-v="4">4</button>
+<button class="btn" data-k="num" data-v="5">5</button>
+<button class="btn" data-k="num" data-v="6">6</button>
+<button class="btn operator" data-k="op" data-v="×">×</button>
+<button class="btn" data-k="num" data-v="1">1</button>
+<button class="btn" data-k="num" data-v="2">2</button>
+<button class="btn" data-k="num" data-v="3">3</button>
+<button class="btn operator" data-k="op" data-v="−">−</button>
+<button class="btn" data-k="num" data-v="0">0</button>
+<button class="btn" data-k="dec">.</button>
+<button class="btn function" data-k="post" data-v="%">%</button>
+<button class="btn operator" data-k="op" data-v="+">+</button>
+<button class="btn function" data-k="sign">+/-</button>
+<button class="btn equals" data-k="eq">=</button>
+</div>
+</div>
+</section>
+<p class="hint">Keyboard: 0–9, + − * / ^ ( ) ! %, Enter, Backspace and Escape.</p>
+</main>
+<script>
+const currentEl=document.getElementById("current"),previousEl=document.getElementById("previous"),angleTag=document.getElementById("angleTag"),angleBtn=document.getElementById("angleBtn"),keys=document.getElementById("keys"),modeToggle=document.getElementById("modeToggle"),modeLabel=document.getElementById("modeLabel");
+let expr="",prevText="",lastAnswer="0",justEvaluated=false,showError=false,degMode=true;
+const OPS="+−×÷^";
+function render(){const text=showError?"Error":(expr||"0");currentEl.textContent=text;currentEl.classList.toggle("long",text.length>16);previousEl.textContent=prevText;const label=degMode?"DEG":"RAD";angleTag.textContent=label;angleBtn.textContent=label}
+function prep(){if(showError){showError=false;expr="";prevText="";justEvaluated=false}}
+function startNew(){if(justEvaluated){expr="";prevText="";justEvaluated=false}}
+function continueFromResult(){if(justEvaluated){justEvaluated=false;prevText=""}}
+function addNumber(d){prep();startNew();if(/(^|[^0-9.])0$/.test(expr))expr=expr.slice(0,-1)+d;else expr+=d;render()}
+function addDecimal(){prep();startNew();const run=expr.match(/[0-9.]*$/)[0];if(run.includes("."))return;expr+=run===""?"0.":".";render()}
+function addOperator(op){prep();continueFromResult();
+if(expr===""){expr=op==="−"?"−":"0"+op}
+else if(expr==="−"){return}
+else{const last=expr.slice(-1);
+if(expr.endsWith("mod"))expr=expr.slice(0,-3)+op;
+else if(OPS.includes(last))expr=expr.slice(0,-1)+op;
+else if(last==="("){if(op==="−")expr+=op}
+else expr+=op}
+render()}
+function addToken(str){prep();startNew();expr+=str;render()}
+function addPostfix(str){prep();continueFromResult();if(!/[0-9.πe)!%]$/.test(expr))return;expr+=str;render()}
+function addOpen(){prep();startNew();expr+="(";render()}
+function addClose(){prep();if(justEvaluated)return;const o=(expr.match(/\(/g)||[]).length,c=(expr.match(/\)/g)||[]).length;if(o>c&&/[0-9.πe)!%]$/.test(expr)){expr+=")";render()}}
+function addAns(){addToken(lastAnswer.startsWith("−")?"("+lastAnswer+")":lastAnswer)}
+function addRandom(){addToken(fmt(Math.random()))}
+function changeSign(){prep();continueFromResult();
+if(expr===""){expr="−";render();return}
+const m=expr.match(/(\d+\.?\d*(?:E[+\-−]?\d+)?|\.\d+|π|e)$/);
+if(!m){if(expr.endsWith("(")){expr+="−";render()}return}
+const before=expr.slice(0,expr.length-m[0].length);
+if(before.endsWith("−")&&/(^|[+−×÷^(]|mod)$/.test(before.slice(0,-1)))expr=before.slice(0,-1)+m[0];
+else expr=before+"−"+m[0];
+render()}
+function backspace(){if(showError||justEvaluated){showError=false;justEvaluated=false;expr="";prevText="";render();return}
+expr=expr.replace(/(sin⁻¹\(|cos⁻¹\(|tan⁻¹\(|sin\(|cos\(|tan\(|log\(|ln\(|abs\(|√\(|∛\(|mod|[\s\S])$/,"");render()}
+function clearAll(){expr="";prevText="";justEvaluated=false;showError=false;render()}
+function toggleAngle(){degMode=!degMode;render()}
+function fmt(v){if(!Number.isFinite(v))throw new Error("Math error");v=parseFloat(v.toPrecision(12));if(v===0)return"0";let s=String(v);if(s.includes("e"))s=s.replace("e","E");return s.replace(/-/g,"−")}
+function factorial(n){if(!Number.isInteger(n)||n<0||n>170)throw new Error("Invalid input");let r=1;for(let i=2;i<=n;i++)r*=i;return r}
+function applyFn(name,x){
+const toRad=v=>degMode?v*Math.PI/180:v,fromRad=v=>degMode?v*180/Math.PI:v,clean=v=>Math.abs(v)<1e-12?0:v;
+switch(name){
+case"sin":return clean(Math.sin(toRad(x)));
+case"cos":return clean(Math.cos(toRad(x)));
+case"tan":{const c=Math.cos(toRad(x));if(Math.abs(c)<1e-12)throw new Error("Undefined");return clean(Math.sin(toRad(x))/c)}
+case"sin⁻¹":if(Math.abs(x)>1)throw new Error("Invalid input");return fromRad(Math.asin(x));
+case"cos⁻¹":if(Math.abs(x)>1)throw new Error("Invalid input");return fromRad(Math.acos(x));
+case"tan⁻¹":return fromRad(Math.atan(x));
+case"log":if(x<=0)throw new Error("Invalid input");return Math.log10(x);
+case"ln":if(x<=0)throw new Error("Invalid input");return Math.log(x);
+case"√":if(x<0)throw new Error("Invalid input");return Math.sqrt(x);
+case"∛":return Math.cbrt(x);
+case"abs":return Math.abs(x)}
+throw new Error("Syntax error")}
+function parse(src){
+const re=/(\d+\.?\d*(?:E[+\-−]?\d+)?|\.\d+(?:E[+\-−]?\d+)?|sin⁻¹|cos⁻¹|tan⁻¹|sin|cos|tan|log|ln|abs|mod|√|∛|π|e|[+−×÷^()!%])/y;
+const tokens=[];let pos=0;
+while(pos<src.length){re.lastIndex=pos;const m=re.exec(src);if(!m)throw new Error("Syntax error");tokens.push(m[1]);pos=re.lastIndex}
+const FUNCS=["sin","cos","tan","sin⁻¹","cos⁻¹","tan⁻¹","log","ln","abs","√","∛"];
+let i=0;const peek=()=>tokens[i],next=()=>tokens[i++];
+const isNum=t=>t!==undefined&&/^[\d.]/.test(t);
+const startsPrimary=t=>t!==undefined&&(isNum(t)||t==="π"||t==="e"||t==="("||FUNCS.includes(t));
+function expression(){let v=term();while(peek()==="+"||peek()==="−"){const op=next(),r=term();v=op==="+"?v+r:v-r}return v}
+function term(){let v=unary();for(;;){const t=peek();
+if(t==="×"){next();v*=unary()}
+else if(t==="÷"){next();const r=unary();if(r===0)throw new Error("Cannot divide by zero");v/=r}
+else if(t==="mod"){next();const r=unary();if(r===0)throw new Error("Cannot divide by zero");v=((v%r)+r)%r}
+else if(startsPrimary(t)){v*=power()}
+else break}return v}
+function unary(){const t=peek();if(t==="−"){next();return-unary()}if(t==="+"){next();return unary()}return power()}
+function power(){const base=postfix();if(peek()==="^"){next();return Math.pow(base,unary())}return base}
+function postfix(){let v=primary();while(peek()==="!"||peek()==="%"){const t=next();v=t==="!"?factorial(v):v/100}return v}
+function primary(){const t=next();
+if(t===undefined)throw new Error("Syntax error");
+if(isNum(t))return Number(t.replace("−","-"));
+if(t==="π")return Math.PI;
+if(t==="e")return Math.E;
+if(t==="("){const v=expression();if(peek()===")")next();return v}
+if(FUNCS.includes(t)){if(next()!=="(")throw new Error("Syntax error");const a=expression();if(peek()===")")next();return applyFn(t,a)}
+throw new Error("Syntax error")}
+const result=expression();if(i<tokens.length)throw new Error("Syntax error");return result}
+function evaluate(){if(showError||justEvaluated||expr==="")return;
+let src=expr.replace(/(?:[+−×÷^]|mod)+$/,"");
+const o=(src.match(/\(/g)||[]).length,c=(src.match(/\)/g)||[]).length;
+if(o>c)src+=")".repeat(o-c);
+try{const result=fmt(parse(src));prevText=src+" =";lastAnswer=result;expr=result;justEvaluated=true}
+catch(err){showError=true;prevText=err.message||"Error"}
+render()}
+keys.addEventListener("click",function(event){const button=event.target.closest("button");if(!button)return;const v=button.dataset.v;
+switch(button.dataset.k){
+case"num":addNumber(v);break;case"dec":addDecimal();break;case"op":addOperator(v);break;
+case"fn":case"const":addToken(v);break;case"post":addPostfix(v);break;
+case"open":addOpen();break;case"close":addClose();break;case"ans":addAns();break;
+case"rand":addRandom();break;case"sign":changeSign();break;case"back":backspace();break;
+case"clear":clearAll();break;case"angle":toggleAngle();break;case"eq":evaluate();break}});
+document.addEventListener("keydown",function(event){const key=event.key;if(event.ctrlKey||event.metaKey||event.altKey)return;
+if(/^[0-9]$/.test(key))addNumber(key);
+else if(key===".")addDecimal();
+else if(key==="+")addOperator("+");
+else if(key==="-")addOperator("−");
+else if(key==="*")addOperator("×");
+else if(key==="/"){event.preventDefault();addOperator("÷")}
+else if(key==="^")addOperator("^");
+else if(key==="(")addOpen();
+else if(key===")")addClose();
+else if(key==="!")addPostfix("!");
+else if(key==="%")addPostfix("%");
+else if(key==="Enter"||key==="="){event.preventDefault();evaluate()}
+else if(key==="Backspace")backspace();
+else if(key==="Escape"||key==="Delete")clearAll()});
+modeToggle.addEventListener("click",function(){document.body.classList.toggle("dark");modeLabel.textContent=document.body.classList.contains("dark")?"DARK MODE":"NORMAL MODE"});
+render();
+</script>
+</body>
+</html>
